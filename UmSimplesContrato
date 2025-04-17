@@ -1,0 +1,35 @@
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.0;
+
+contract UmSimplesContrato{
+    
+    uint ValorASerArmazenado;
+
+    function set(uint x) public {
+        ValorASerArmazenado = x;
+    }
+
+    function get() public view returns(uint) {
+        return ValorASerArmazenado;
+    }
+
+}
+// O que faz esse código?
+// Objetivo: Demonstra de forma simples como armazenar e recuperar dados na blockchain.
+// A linha SPDX serve para informar a licença de uso do seu contrato inteligente (Obrigatório)
+// A linha "Pragma Solidity" no início de um contrato serve para especificar a versão do compilador (Obrigatório)
+// Então definimos o CONTRACT seguido do nome do contrato, abrindo e fechando chaves
+
+// NA PARTE INTERNA DO CONTRATO
+// Definimos uma variável e sua tipagem para armazenar um valor
+
+// A função SET serve para INSERIR um valor no 'x' que está condicionado a receber um número inteiro 'uint' e esta
+// função por sua vez está como 'public' o que possibilita que qualquer um na blockchain possa inserir um valor para
+// ser armazenado, então dentro da função colocamos a variável que criamos para armazenar o valor que será enviado
+// pela função SET
+
+// A função GET por sua vez, apenas retorna o valor que está armazenado na variável 'ValorASerArmazenado'
+// como a mesma encontra-se como 'public', seguida da função 'view', isso significa que qualquer um pode acessar
+// a função GET, pode ler o contrato, mas não pode alterá-lo, pois a mesma esta condicionada a retornar um número
+// inteiro que no caso é a variável 'ValorASerArmazenado' e fim.
