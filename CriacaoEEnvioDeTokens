@@ -1,0 +1,67 @@
+// Esse contrato inteligente tem como objetivo permitir a criação e o envio de tokens.
+// Apenas o endereço que fez o deploy (minter) pode criar novas moedas usando a função 'mint'.
+// Já a função 'send' permite que qualquer pessoa que tenha saldo possa transferir tokens para outro endereço.
+// Tudo isso fica registrado na blockchain: saldos são públicos e transações são emitidas via evento 'Sent'.
+
+// SPDX-License-Identifier: GPL-3.0
+
+pragma solidity ^0.8.0;
+
+contract CriacaoEEnvioDeTokens{
+    // Essa linha armazena um endereço Ethereum em uma variável de estado (onde seu valor é armazenado
+    // permantemente na blockchain, enquanto o contrato existir) do tipo 'public' que faz com que o Solidity
+    // permita que qualquer um possa consultar esse endereço. 'minter' é o nome da variável, que também poderia se
+    // chamar 'criador', 'qmPodeCriarNovasMoedas' e assim por diante.
+    address public minter;
+
+    // Quando usamos 'mapping', estamos criando uma estrutura que associa uma chave a um valor.
+    // Nesse caso, estamos associando um endereço Ethereum (address) a um número inteiro (uint).
+    // A variável 'balances' representa essa estrutura e, por ser 'public', qualquer pessoa pode
+    // consultar o saldo associado a um endereço na blockchain.
+    mapping (address => uint) public balances;
+
+    // Esse evento é acionado sempre que ocorre uma transação no contrato. Ele registra
+    // quem enviou (from), quem recebeu (to) e a quantidade (amount) transferida.
+    // Isso é útil pra deixar um histórico claro das transações no log da blockchain.
+    event Sent(address from, address to, uint amount);
+
+    // A função 'constructor' é executada apenas uma vez na hora do Deploy. Independente da sua posição no código,
+    // ela sempre será a primeira a rodar, pois o compilador já identifica que é um constructor e não trata como
+    // uma função comum. Nesse caso, o endereço que fizer o deploy do contrato será armazenado na variável 'minter'.
+    constructor() {
+        minter = msg.sender;
+    }
+
+    // Essa função 'mint' é responsável por criar novas moedas e enviar direto para o endereço informado.
+    // A função só pode ser executada por quem fez o deploy do contrato, que nesse caso é o 'minter'.
+    // Primeiro ela faz uma verificação com o 'require' pra garantir que só o minter possa criar moedas.
+    // Depois disso, ela adiciona a quantidade de moedas no saldo do endereço que for passado como 'receiver'.
+    function mint(address receiver, uint amount) public {
+        require(msg.sender == minter);
+        balances[receiver] += amount;
+    }
+
+    // Aqui estamos criando um tipo de erro personalizado chamado 'InsufficientBalance'
+    // que serve pra mostrar, de forma mais clara, quando alguém tentar enviar mais do que tem de saldo.
+    // Ele retorna dois valores: o que foi solicitado (requested) e o que realmente está disponível (available)
+    error InsufficientBalance(uint requested, uint available);
+
+    // A função 'send' serve pra transferir tokens de quem chamou a função (msg.sender) pra outro endereço (receiver).
+    // Primeiro, ela verifica se a pessoa tem saldo suficiente pra fazer a transferência.
+    // Se o valor que ela quer mandar for maior do que tem na carteira, a função dispara aquele erro personalizado
+    // 'InsufficientBalance', informando quanto foi solicitado e quanto ela realmente tem.
+    // Caso tenha saldo suficiente, ele desconta o valor do sender, adiciona no balance do receiver,
+    // e no final dispara o evento 'Sent' mostrando quem enviou, pra quem foi e quanto foi enviado.
+    function send(address receiver, uint amount) public {
+        if (amount > balances[msg.sender])
+        revert InsufficientBalance({
+            requested: amount,
+            available: balances[msg.sender]
+        });
+
+        balances[msg.sender] -= amount;
+        balances[receiver] += amount;
+        emit Sent(msg.sender, receiver, amount);
+    }
+
+}
